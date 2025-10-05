@@ -9,6 +9,7 @@ const envSchema = z.object({
   POSTGRES_PASSWORD: z.string().nonempty().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().optional(),
+  JWT_SECRET: z.string().nonempty(),
 })
 
 // Parse and validate process.env
@@ -29,6 +30,7 @@ export const envs = {
   postgresPassword: _env.data.POSTGRES_PASSWORD,
   nodeEnv: _env.data.NODE_ENV,
   port: _env.data.PORT ?? 3000,
+  jwtSecret: _env.data.JWT_SECRET,
 }
 
 export type Env = typeof envs
