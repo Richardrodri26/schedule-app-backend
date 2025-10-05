@@ -121,3 +121,25 @@ pnpm run test    # tests unitarios
 
 Si algo falla, copia el mensaje de error y revisa la traza — puedo ayudarte a interpretar y fijarlo.
 
+## Importes absolutos desde `@src/` (alias)
+
+Este proyecto soporta importaciones que empiezan con `@src/` (y mantiene `src/` por compatibilidad) gracias a la configuración en `tsconfig.json`.
+Por ejemplo:
+
+```ts
+import { UsersService } from '@src/users/users.service';
+```
+
+Notas sobre tiempo de ejecución:
+- Para compilación/IDE TypeScript esto funciona directamente. Para ejecutar con `ts-node` en desarrollo considera usar `tsconfig-paths`:
+
+```bash
+pnpm add -D tsconfig-paths
+TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/main.ts
+```
+
+- Si compilas a JavaScript (`pnpm run build`) y luego ejecutas con Node, las rutas se resolverán porque se compilan a rutas relativas. Si usas un loader o configuración ESM especial, puede que necesites ajustar `package.json`/Node resolver.
+
+Compatibilidad: ambas formas funcionarán en TypeScript (`@src/...` y `src/...`) porque ambos alias están mapeados en `tsconfig.json`.
+
+
