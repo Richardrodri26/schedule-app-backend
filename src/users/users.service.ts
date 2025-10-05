@@ -3,6 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import tryCatch from '@src/common/functions/tryCatch';
+import { PaginationDto } from '@src/common/dto/pagination.dto';
+import { paginatePrisma } from '@src/common/functions/paginate-prisma';
 
 @Injectable()
 export class UsersService {
@@ -21,8 +23,14 @@ export class UsersService {
     return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(paginationDto: PaginationDto) {
+    // Usamos paginatePrisma para encapsular count/find y transformación de resultados
+    return paginatePrisma(
+      paginationDto,
+      () => this.prisma.user.count(),
+      ({ skip, take }) => this.prisma.user.findMany({ skip, take }),
+      ({ password, ...u }) => u,
+    );
   }
 
   async findOne(id: string) {
