@@ -1,30 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
+import tryCatch from '@src/common/functions/tryCatch';
 
 @Injectable()
 export class UsersService {
 
   constructor(private prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async create(createUserDto: CreateUserDto) {
+    const [error, user] = await tryCatch(this.prisma.user.create({
+      data: createUserDto,
+    }));
+
+    if (error) {
+      throw new InternalServerErrorException(`Error al crear el usuario: ${error.message}`);
+    }
+
+    return user;
   }
 
   findAll() {
     return `This action returns all users`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    const [error, user] = await tryCatch(this.prisma.user.findUnique({
+      where: { id },
+    }));
+
+    if (error) {
+      throw new InternalServerErrorException('Error al buscar el usuario: ' + error.message);
+    }
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    };
+
+    const { password, ...userWithoutPassword } = user; // Excluir password
+
+    return userWithoutPassword;
+
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    this.findOne(id);
+
+    const [error, updatedUser] = await tryCatch(this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+    }));
+
+    if (error) {
+      throw new InternalServerErrorException('Error al actualizar el usuario: ' + error.message);
+    }
+
+    const { password, ...userWithoutPassword } = updatedUser!; // Excluir password
+
+    return userWithoutPassword;
+
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    this.findOne(id);
+
+    const [error, deletedUser] = await tryCatch(this.prisma.user.delete({
+      where: { id },
+    }));
+
+    if (error) {
+      throw new InternalServerErrorException('Error al eliminar el usuario: ' + error.message);
+    }
+
+    const { password, ...userWithoutPassword } = deletedUser!; // Excluir password
+
+    return userWithoutPassword;
+
   }
 }
